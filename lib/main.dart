@@ -60,7 +60,7 @@ class _AppState extends State<App> {
     }
 
     return MaterialApp(
-      home: HomePage(),
+      home: LoginPage(),
     );
   }
 }
