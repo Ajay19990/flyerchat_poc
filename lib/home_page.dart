@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -120,8 +121,32 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // These functions can self contain any user auth logic required, they all have access to _email and _password
-  void _loginPressed() {
+  void _loginPressed() async {
     print('The user wants to login with $_email and $_password');
+
+    try {
+      final userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _email,
+        password: _password,
+      );
+
+      if (userCredential.user == null) return;
+      _showDialog(
+        'login successful, uid: ${userCredential.user!.uid}',
+      );
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('uid', userCredential.user!.uid);
+
+      ///
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        _showDialog('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        _showDialog('Wrong password provided for that user.');
+      }
+    }
   }
 
   void _createAccountPressed() async {
@@ -132,9 +157,15 @@ class _LoginPageState extends State<LoginPage> {
         email: _email,
         password: _password,
       );
+      if (userCredential.user == null) return;
       _showDialog(
         'created account successful, uid: ${userCredential.user!.uid}',
       );
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('uid', userCredential.user!.uid);
+
+      ///
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         _showDialog('The password provided is too weak.');
