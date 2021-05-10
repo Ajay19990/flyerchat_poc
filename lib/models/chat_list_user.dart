@@ -1,11 +1,11 @@
 class ChatListUser {
   ChatListUser({
     required this.uid,
-    required this.fistName,
+    required this.firstName,
     required this.lastName,
   });
 
   final String uid;
-  final String fistName;
+  final String firstName;
   final String lastName;
 }

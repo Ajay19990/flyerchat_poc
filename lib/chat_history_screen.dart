@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flyerchat_poc/chat_screen.dart';
+import 'package:flyerchat_poc/home_page.dart';
 import 'package:flyerchat_poc/models/chat_list_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatHistoryScreen extends StatefulWidget {
   const ChatHistoryScreen({Key? key}) : super(key: key);
@@ -23,6 +26,21 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Users'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () async {
+              FirebaseAuth.instance.signOut();
+              final prefs = await SharedPreferences.getInstance();
+              prefs.setString('uid', '');
+              final route = MaterialPageRoute(builder: (_) => LoginPage());
+              Navigator.pushReplacement(context, route);
+            },
+          ),
+        ],
+      ),
       body: _getBody(),
     );
   }
@@ -38,13 +56,20 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
         itemBuilder: (_, index) {
           final user = users[index];
           return Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black26),
+            ),
             padding: EdgeInsets.all(10),
-            color: Colors.black26,
             child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.indigoAccent,
               ),
-              title: Text(user.fistName + ' ' + user.lastName),
+              title: Text(user.firstName + ' ' + user.lastName),
+              onTap: () {
+                final route = MaterialPageRoute(
+                    builder: (_) => ChatScreen(chatListUser: user));
+                Navigator.push(context, route);
+              },
             ),
           );
         },
@@ -61,7 +86,7 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
       final users = querySnapshot.docs.map((result) {
         return ChatListUser(
           uid: result.id,
-          fistName: result['firstName'],
+          firstName: result['firstName'],
           lastName: result['lastName'],
         );
       }).toList();

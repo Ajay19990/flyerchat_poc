@@ -154,6 +154,9 @@ class _LoginPageState extends State<LoginPage> {
       if (userCredential.user == null) return;
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('uid', userCredential.user!.uid);
+
+      final route = MaterialPageRoute(builder: (_) => ChatHistoryScreen());
+      Navigator.pushReplacement(context, route);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         _showDialog('No user found for that email.');
@@ -191,7 +194,6 @@ class _LoginPageState extends State<LoginPage> {
 
       final route = MaterialPageRoute(builder: (_) => ChatHistoryScreen());
       Navigator.pushReplacement(context, route);
-      print('login successful, uid: ${userCredential.user!.uid}');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         _showDialog('The password provided is too weak.');
