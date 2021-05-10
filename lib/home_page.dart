@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'chat_history_screen.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -10,8 +13,11 @@ class LoginPage extends StatefulWidget {
 enum FormType { login, register }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailFilter = TextEditingController();
-  final TextEditingController _passwordFilter = TextEditingController();
+  final _emailFilter = TextEditingController();
+  final _passwordFilter = TextEditingController();
+  final _firstNameTextController = TextEditingController();
+  final _lastNameTextController = TextEditingController();
+
   String _email = "";
   String _password = "";
   FormType _form = FormType.login;
@@ -80,7 +86,21 @@ class _LoginPageState extends State<LoginPage> {
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-          )
+          ),
+          if (_form == FormType.register)
+            Container(
+              child: TextField(
+                controller: _firstNameTextController,
+                decoration: InputDecoration(labelText: 'First Name'),
+              ),
+            ),
+          if (_form == FormType.register)
+            Container(
+              child: TextField(
+                controller: _lastNameTextController,
+                decoration: InputDecoration(labelText: 'Last Name'),
+              ),
+            ),
         ],
       ),
     );
@@ -132,14 +152,8 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (userCredential.user == null) return;
-      _showDialog(
-        'login successful, uid: ${userCredential.user!.uid}',
-      );
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('uid', userCredential.user!.uid);
-
-      ///
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         _showDialog('No user found for that email.');
@@ -158,14 +172,26 @@ class _LoginPageState extends State<LoginPage> {
         password: _password,
       );
       if (userCredential.user == null) return;
-      _showDialog(
+
+      print(
         'created account successful, uid: ${userCredential.user!.uid}',
       );
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('uid', userCredential.user!.uid);
 
-      ///
+      await FirebaseChatCore.instance.createUserInFirestore(
+        types.User(
+          avatarUrl: 'https://i.pravatar.cc/300',
+          firstName: _firstNameTextController.text,
+          id: userCredential.user!.uid,
+          lastName: _lastNameTextController.text,
+        ),
+      );
+
+      final route = MaterialPageRoute(builder: (_) => ChatHistoryScreen());
+      Navigator.pushReplacement(context, route);
+      print('login successful, uid: ${userCredential.user!.uid}');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         _showDialog('The password provided is too weak.');
