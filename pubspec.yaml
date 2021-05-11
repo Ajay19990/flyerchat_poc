@@ -37,7 +37,7 @@ dev_dependencies:
   flutter_chat_types: ^2.1.2
   file_picker:
   firebase_storage:
-  image_picker:
+#  image_picker:
   mime:
   open_file:
   path_provider:
