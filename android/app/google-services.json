@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1012124191307",
+    "project_id": "flyerchat-poc",
+    "storage_bucket": "flyerchat-poc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1012124191307:android:893d36468286a4a7fbdbce",
+        "android_client_info": {
+          "package_name": "com.ajay.flyerchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1012124191307-0fa61r7cr30np6reevkqb3n0j55q3f5h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApMMdbqU6DWOGWx-ga3wjoPskFi-zzbjU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1012124191307-0fa61r7cr30np6reevkqb3n0j55q3f5h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1012124191307-tvvn1seohk9hpee829d6l9laepkvchrb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ajay.flyerchat"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
