@@ -14,6 +14,8 @@ class ChatHistoryScreen extends StatefulWidget {
 }
 
 class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
+  List<types.User> users = [];
+
   @override
   void initState() {
     super.initState();
@@ -38,18 +40,77 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
               },
             ),
           ],
+          leading: IconButton(
+            icon: Icon(Icons.group_add),
+            onPressed: () {
+              _showDialog();
+            },
+          ),
           bottom: TabBar(
             onTap: (index) {
               // Tab index when user select it, it start from zero
             },
             tabs: [
-              Tab(icon: Icon(Icons.verified_user)),
+              Tab(icon: Icon(Icons.person)),
               Tab(icon: Icon(Icons.chat)),
             ],
           ),
         ),
         body: _getBody(),
       ),
+    );
+  }
+
+  _showDialog() async {
+    await showDialog<String>(
+      context: context,
+      builder: (_) {
+        final controller = TextEditingController();
+        return _SystemPadding(
+          child: AlertDialog(
+            contentPadding: const EdgeInsets.all(16.0),
+            content: Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextField(
+                    autofocus: true,
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                    ),
+                  ),
+                )
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                  child: const Text('CANCEL'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              TextButton(
+                  child: const Text('CREATE'),
+                  onPressed: () async {
+                    final halfLength = (users.length / 2).ceil();
+
+                    final leftSide = users.sublist(0, halfLength);
+
+                    final room =
+                        await FirebaseChatCore.instance.createGroupRoom(
+                      imageUrl: '',
+                      name: controller.text,
+                      users: users,
+                    );
+                    final route = MaterialPageRoute(
+                      builder: (_) => ChatScreen(roomId: room.id),
+                    );
+                    Navigator.pop(context);
+                    Navigator.push(context, route);
+                  })
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -75,15 +136,15 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
           return Center(child: Text('Error occurred'));
         }
 
-        var data = snapshot.data as List<types.User>;
+        this.users = snapshot.data as List<types.User>;
 
         final selfUid = FirebaseAuth.instance.currentUser!.uid;
-        data = data.where((u) => selfUid != u.id).toList();
+        users = users.where((u) => selfUid != u.id).toList();
 
         return ListView.builder(
-          itemCount: data.length,
+          itemCount: users.length,
           itemBuilder: (_, index) {
-            final user = data[index];
+            final user = users[index];
             return Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black26),
@@ -96,7 +157,7 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
                 title: Text(user.firstName! + ' ' + user.lastName!),
                 onTap: () async {
                   final room =
-                      await FirebaseChatCore.instance.createRoom(data[index]);
+                      await FirebaseChatCore.instance.createRoom(users[index]);
                   final route = MaterialPageRoute(
                     builder: (_) => ChatScreen(roomId: room.id),
                   );
@@ -152,24 +213,40 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
     );
   }
 
-  // _fetchUsers() async {
-  //   CollectionReference users = FirebaseFirestore.instance.collection('users');
-  //
-  //   final selfUid = FirebaseAuth.instance.currentUser!.uid;
-  //
-  //   users.get().then((querySnapshot) {
-  //     final users = querySnapshot.docs.map((result) {
-  //       return ChatListUser(
-  //         uid: result.id,
-  //         firstName: result['firstName'],
-  //         lastName: result['lastName'],
-  //       );
-  //     }).toList();
-  //
-  //     this.users = users.where((element) => selfUid != element.uid).toList();
-  //     setState(() {
-  //       _isLoading = false;
-  //     });
-  //   });
-  // }
+  /// _fetchUsers() async {
+  ///   CollectionReference users = FirebaseFirestore.instance.collection('users');
+  ///
+  ///   final selfUid = FirebaseAuth.instance.currentUser!.uid;
+  ///
+  ///   users.get().then((querySnapshot) {
+  ///     final users = querySnapshot.docs.map((result) {
+  ///       return ChatListUser(
+  ///         uid: result.id,
+  ///         firstName: result['firstName'],
+  ///         lastName: result['lastName'],
+  ///       );
+  ///     }).toList();
+  ///
+  ///     this.users = users.where((element) => selfUid != element.uid).toList();
+  ///     setState(() {
+  ///       _isLoading = false;
+  ///     });
+  ///   });
+  /// }
+
+}
+
+class _SystemPadding extends StatelessWidget {
+  final Widget child;
+
+  _SystemPadding({Key? key, required this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var mediaQuery = MediaQuery.of(context);
+    return new AnimatedContainer(
+        padding: mediaQuery.viewInsets,
+        duration: const Duration(milliseconds: 300),
+        child: child);
+  }
 }

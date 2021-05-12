@@ -86,7 +86,12 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _openFile(types.FileMessage message) async {
+  void _openFile(types.Message m) async {
+    if (!(m is types.FileMessage)) {
+      return;
+    }
+    final message = m;
+    print('message tapped');
     var localPath = message.uri;
 
     if (message.uri.startsWith('http')) {
@@ -206,8 +211,10 @@ class _ChatScreenState extends State<ChatScreen> {
             messages: snapshot.data ?? [],
             onAttachmentPressed: _handleAtachmentPress,
             // onFilePressed: _openFile,
+            onMessageTap: _openFile,
             onPreviewDataFetched: _onPreviewDataFetched,
             onSendPressed: _onSendPressed,
+            theme: DarkChatTheme(),
             user: types.User(
               id: FirebaseChatCore.instance.firebaseUser?.uid ?? '',
             ),

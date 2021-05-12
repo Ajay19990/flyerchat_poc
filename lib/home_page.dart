@@ -126,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
       return Container(
         child: Column(
           children: <Widget>[
-            SizedBox(height: 50),
+            SizedBox(height: 20),
             ElevatedButton(
               child: Text('Create an Account'),
               onPressed: _createAccountPressed,
