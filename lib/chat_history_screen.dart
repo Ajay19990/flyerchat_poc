@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flyerchat_poc/chat_screen.dart';
 import 'package:flyerchat_poc/home_page.dart';
-import 'package:flyerchat_poc/models/chat_list_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
@@ -16,38 +14,55 @@ class ChatHistoryScreen extends StatefulWidget {
 }
 
 class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
-  // List<ChatListUser> users = [];
-  // var _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    // _fetchUsers();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Users'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              FirebaseAuth.instance.signOut();
-              final prefs = await SharedPreferences.getInstance();
-              prefs.setString('uid', '');
-              final route = MaterialPageRoute(builder: (_) => LoginPage());
-              Navigator.pushReplacement(context, route);
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Users'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: () async {
+                FirebaseAuth.instance.signOut();
+                final prefs = await SharedPreferences.getInstance();
+                prefs.setString('uid', '');
+                final route = MaterialPageRoute(builder: (_) => LoginPage());
+                Navigator.pushReplacement(context, route);
+              },
+            ),
+          ],
+          bottom: TabBar(
+            onTap: (index) {
+              // Tab index when user select it, it start from zero
             },
+            tabs: [
+              Tab(icon: Icon(Icons.verified_user)),
+              Tab(icon: Icon(Icons.chat)),
+            ],
           ),
-        ],
+        ),
+        body: _getBody(),
       ),
-      body: _getBody(),
     );
   }
 
   Widget _getBody() {
+    return TabBarView(
+      children: [
+        _getUserList(),
+        _getChatList(),
+      ],
+    );
+  }
+
+  Widget _getUserList() {
     return StreamBuilder<List<types.User>>(
       stream: FirebaseChatCore.instance.users(),
       initialData: [],
@@ -91,6 +106,48 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
             );
           },
         );
+      },
+    );
+  }
+
+  _getChatList() {
+    return StreamBuilder<List<Room>>(
+      stream: FirebaseChatCore.instance.rooms(),
+      initialData: const [],
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error occurred'));
+        }
+
+        final data = snapshot.data as List<Room>;
+
+        return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (_, index) {
+              final room = data[index];
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black26),
+                ),
+                padding: EdgeInsets.all(10),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.indigoAccent,
+                  ),
+                  title: Text(room.name ?? 'no name'),
+                  onTap: () async {
+                    final route = MaterialPageRoute(
+                      builder: (_) => ChatScreen(roomId: room.id),
+                    );
+                    Navigator.push(context, route);
+                  },
+                ),
+              );
+            });
       },
     );
   }
