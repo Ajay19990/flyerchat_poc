@@ -6,7 +6,7 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:http/http.dart' as http;
-// import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -49,11 +49,24 @@ class _ChatScreenState extends State<ChatScreen> {
                 onPressed: () {
                   Navigator.pop(context);
                   print('show image picker...');
-                  // _showImagePicker();
+                  _showImagePicker();
+                  // _showVideoPicker();
                 },
                 child: const Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Open image picker'),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  print('show video picker...');
+                  // _showImagePicker();
+                  _showVideoPicker();
+                },
+                child: const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Open video picker'),
                 ),
               ),
               TextButton(
@@ -153,47 +166,81 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // void _showImagePicker() async {
-  //   final result = await ImagePicker().getImage(
-  //     imageQuality: 70,
-  //     maxWidth: 1440,
-  //     source: ImageSource.gallery,
-  //   );
-  //
-  //   if (result != null) {
-  //     _setAttachmentUploading(true);
-  //     final file = File(result.path);
-  //     final size = file.lengthSync();
-  //     final bytes = await result.readAsBytes();
-  //     final image = await decodeImageFromList(bytes);
-  //     final imageName = result.path.split('/').last;
-  //
-  //     try {
-  //       final reference = FirebaseStorage.instance.ref(imageName);
-  //       await reference.putFile(file);
-  //       final uri = await reference.getDownloadURL();
-  //
-  //       final message = types.PartialImage(
-  //         height: image.height.toDouble(),
-  //         imageName: imageName,
-  //         size: size,
-  //         uri: uri,
-  //         width: image.width.toDouble(),
-  //       );
-  //
-  //       FirebaseChatCore.instance.sendMessage(
-  //         message,
-  //         widget.roomId,
-  //       );
-  //       _setAttachmentUploading(false);
-  //     } on FirebaseException catch (e) {
-  //       _setAttachmentUploading(false);
-  //       print(e);
-  //     }
-  //   } else {
-  //     // User canceled the picker
-  //   }
-  // }
+  void _showVideoPicker() async {
+    final result = await ImagePicker().getVideo(source: ImageSource.gallery);
+    print(result);
+
+    if (result != null) {
+      _setAttachmentUploading(true);
+      final file = File(result.path);
+      final size = file.lengthSync();
+      final videoName = result.path.split('/').last;
+
+      try {
+        final reference = FirebaseStorage.instance.ref(videoName);
+        await reference.putFile(file);
+        final uri = await reference.getDownloadURL();
+
+        final message = types.PartialFile(
+          fileName: videoName,
+          size: size,
+          uri: uri,
+        );
+
+        FirebaseChatCore.instance.sendMessage(
+          message,
+          widget.roomId,
+        );
+        _setAttachmentUploading(false);
+      } on FirebaseException catch (e) {
+        _setAttachmentUploading(false);
+        print(e);
+      }
+    }
+  }
+
+  void _showImagePicker() async {
+    final result = await ImagePicker().getImage(
+      imageQuality: 70,
+      maxWidth: 1440,
+      source: ImageSource.gallery,
+    );
+
+    print(result);
+    if (result != null) {
+      _setAttachmentUploading(true);
+      final file = File(result.path);
+      final size = file.lengthSync();
+      final bytes = await result.readAsBytes();
+      final image = await decodeImageFromList(bytes);
+      final imageName = result.path.split('/').last;
+
+      try {
+        final reference = FirebaseStorage.instance.ref(imageName);
+        await reference.putFile(file);
+        final uri = await reference.getDownloadURL();
+
+        final message = types.PartialImage(
+          height: image.height.toDouble(),
+          imageName: imageName,
+          size: size,
+          uri: uri,
+          width: image.width.toDouble(),
+        );
+
+        FirebaseChatCore.instance.sendMessage(
+          message,
+          widget.roomId,
+        );
+        _setAttachmentUploading(false);
+      } on FirebaseException catch (e) {
+        _setAttachmentUploading(false);
+        print(e);
+      }
+    } else {
+      print('User canceled the picker');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
